@@ -174,7 +174,6 @@
                 <div id="notes-list" style="max-height:170px; overflow-y:auto; border-top:1px solid #333;"></div>
             </div>
         </div>
-
     </div>
     </div>
 
@@ -361,6 +360,7 @@
             document.querySelectorAll('.save-input').forEach(i => i.value = "");
             document.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
         }
+        restoreDrafts();
     }
 
     function loadToday() {
@@ -375,6 +375,15 @@
         }
     }
 
+    function restoreDrafts() {
+        document.querySelectorAll('.save-input').forEach(input => {
+            let savedDraft = localStorage.getItem('draft_' + input.id);
+            if (savedDraft !== null && input.id) {
+                input.value = savedDraft;
+            }
+        });
+    }
+
     function saveEntry() {
         const today = new Date().toLocaleDateString();
         let currentEntry = null;
@@ -382,8 +391,12 @@
         else { currentEntry = { id: Date.now(), date: today, data: {} }; db.unshift(currentEntry); }
 
         document.querySelectorAll('.save-input').forEach(input => {
-            if (input.value && input.value !== "0" && input.value !== "") currentEntry.data[input.id] = input.value;
-            else delete currentEntry.data[input.id];
+            if (input.value && input.value !== "0" && input.value !== "") {
+                currentEntry.data[input.id] = input.value;
+            } else {
+                delete currentEntry.data[input.id];
+            }
+            localStorage.removeItem('draft_' + input.id);
         });
 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
@@ -462,7 +475,6 @@
                 }
             });
 
-            // Populate Status dropdown (separate from exercises)
             const statusSelect = document.getElementById('status-select');
             if (statusSelect) {
                 statusSelect.innerHTML = '<option value="">Select Status Metric...</option>';
@@ -476,12 +488,8 @@
                         statusFound = true;
                     }
                 });
-                if (!statusFound) {
-                    // keep dropdown but no options
-                }
             }
 
-            // Populate Recent Notes list
             const notesList = document.getElementById('notes-list');
             if (notesList) {
                 notesList.innerHTML = "";
@@ -499,10 +507,8 @@
                     notesList.innerHTML = '<div style="padding:10px 0; color:#666;">No notes recorded yet.</div>';
                 }
             }
-
             
             if(!found) {
-                // If exercises aren't logged yet, still allow opening Analysis for Status/Notes if present
                 let hasStatus = false;
                 keys.forEach(k => { if (k.startsWith('status-')) hasStatus = true; });
                 if(!hasStatus) { alert("No data recorded yet."); return; }
@@ -550,7 +556,6 @@
             options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: '#333' } }, x: { ticks: { color: '#888' } } }, plugins: { legend: { display: false } } }
         });
     }
-
 
     function updateStatusChart() {
         const key = document.getElementById('status-select') ? document.getElementById('status-select').value : "";
