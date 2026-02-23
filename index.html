@@ -162,7 +162,7 @@
             <span style="color:#fff; font-weight:bold;">Analysis Hub</span>
         </div>
         <select id="trend-select" onchange="updateChart()" style="margin-bottom:10px;"><option value="">Select Exercise...</option></select>
-        <div class="chart-wrapper"><div class="chart-container"><canvas id="trendCanvas"></canvas></div>
+        <div class="chart-wrapper"><div class="chart-container"><canvas id="trendCanvas"></canvas></div></div>
         <div style="margin-top:18px; border-top:1px solid #333; padding-top:14px;">
             <div style="color:#fff; font-weight:bold; margin-bottom:10px;">Daily Status & Notes</div>
             <select id="status-select" onchange="updateStatusChart()" style="margin-bottom:10px;">
@@ -174,8 +174,6 @@
                 <div id="notes-list" style="max-height:170px; overflow-y:auto; border-top:1px solid #333;"></div>
             </div>
         </div>
-
-    </div>
     </div>
 
     <button class="btn btn-sec" onclick="openInfo()" style="margin-bottom:20px;">ℹ️ Program Guide</button>
@@ -221,7 +219,7 @@
             <h3>Knee Flexion <span class="desc-icon" onclick="toggleDesc(this)">❓</span></h3>
             <div class="desc-text"><strong>Protocol:</strong> Lie on your side. Slowly slide your heel up towards your buttock. Focus on the hamstring.</div>
             <div class="row"><div class="col"><label>Left Reps</label><input type="number" id="kneeflex-l" class="save-input" autocomplete="off"></div><div class="col"><label>Right Reps</label><input type="number" id="kneeflex-r" class="save-input" autocomplete="off"></div></div>
-            <div style="margin-top:5px;"><label>Assistance</label><select id="kneeflex-assist" class="save-input"><option value="Band/Hand">Band/Hand</option><option value="Active">Active</option><option value="Passive">Passive</option></select></div>
+            <div style="margin-top:5px;"><label>Assistance</label><select id="kneeflex-assist" autocomplete="off"><option value="">-</option><option value="Band/Hand">Band/Hand</option><option value="Active">Active</option><option value="Passive">Passive</option></select></div>
         </div>
         <div class="ex-group">
             <h3>Hip Lift (Abduction) <span class="desc-icon" onclick="toggleDesc(this)">❓</span></h3>
@@ -306,8 +304,10 @@
         document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') loadData(); });
         loadData();
         
+        // TRUE REAL-TIME AUTO-SAVE: Automatically updates the database on every keystroke/change
         document.querySelectorAll('.save-input').forEach(input => {
-            input.addEventListener('input', function() { if(this.id) localStorage.setItem('draft_' + this.id, this.value); });
+            input.addEventListener('input', autoSave);
+            input.addEventListener('change', autoSave);
         });
 
         const now = new Date();
@@ -355,7 +355,24 @@
     function loadData() {
         const raw = localStorage.getItem(STORAGE_KEY);
         if(raw) { 
-            try { db = JSON.parse(raw); renderHistory(); loadToday(); } 
+            try { 
+                db = JSON.parse(raw); 
+                
+                // GHOSTBUSTER: Scrub old "kneeflex-assist" data completely out of existence
+                let dbChanged = false;
+                db.forEach(e => {
+                    if (e.data && e.data['kneeflex-assist']) {
+                        delete e.data['kneeflex-assist'];
+                        dbChanged = true;
+                    }
+                });
+                if (dbChanged) {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+                }
+
+                renderHistory(); 
+                loadToday(); 
+            } 
             catch(e) { console.error(e); } 
         } else {
             document.querySelectorAll('.save-input').forEach(i => i.value = "");
@@ -375,20 +392,26 @@
         }
     }
 
-    function saveEntry() {
+    function autoSave() {
         const today = new Date().toLocaleDateString();
         let currentEntry = null;
         if (db.length > 0 && db[0].date === today) currentEntry = db[0];
         else { currentEntry = { id: Date.now(), date: today, data: {} }; db.unshift(currentEntry); }
 
         document.querySelectorAll('.save-input').forEach(input => {
-            if (input.value && input.value !== "0" && input.value !== "") currentEntry.data[input.id] = input.value;
-            else delete currentEntry.data[input.id];
+            if (input.value && input.value !== "0" && input.value !== "") {
+                currentEntry.data[input.id] = input.value;
+            } else {
+                delete currentEntry.data[input.id];
+            }
         });
 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
         renderHistory();
+    }
 
+    function saveEntry() {
+        autoSave();
         const btn = document.getElementById('save-btn');
         const origText = btn.textContent;
         btn.textContent = "✅ SAVED";
@@ -448,25 +471,37 @@
         if(isHidden) {
             const select = document.getElementById('trend-select');
             select.innerHTML = "<option value=\"\">Select Exercise...</option>";
-            let keys = new Set();
-            db.forEach(e => { if(e.data) Object.keys(e.data).forEach(k => keys.add(k)); });
             
-            let found = false;
-            keys.forEach(k => {
-                if(k !== 'daily-notes' && !k.startsWith('status-')) {
-                    let label = k.replace(/-/g, ' ').toUpperCase();
-                    let opt = document.createElement('option');
-                    opt.value = k; opt.textContent = label;
-                    select.appendChild(opt);
-                    found = true;
+            let validGraphKeys = new Set();
+            db.forEach(e => {
+                if(e.data) {
+                    Object.entries(e.data).forEach(([k, v]) => {
+                        if(k !== 'daily-notes' && !k.startsWith('status-') && !k.includes('assist')) {
+                            let num = parseFloat(v);
+                            if(!isNaN(num) && num > 0) {
+                                validGraphKeys.add(k);
+                            }
+                        }
+                    });
                 }
             });
+            
+            let found = false;
+            validGraphKeys.forEach(k => {
+                let label = k.replace(/-/g, ' ').toUpperCase();
+                let opt = document.createElement('option');
+                opt.value = k; opt.textContent = label;
+                select.appendChild(opt);
+                found = true;
+            });
 
-            // Populate Status dropdown (separate from exercises)
             const statusSelect = document.getElementById('status-select');
             if (statusSelect) {
                 statusSelect.innerHTML = '<option value="">Select Status Metric...</option>';
                 let statusFound = false;
+                let keys = new Set();
+                db.forEach(e => { if(e.data) Object.keys(e.data).forEach(k => keys.add(k)); });
+                
                 keys.forEach(k => {
                     if (k.startsWith('status-')) {
                         let label = k.replace(/status-/, '').replace(/-/g, ' ').toUpperCase();
@@ -476,12 +511,8 @@
                         statusFound = true;
                     }
                 });
-                if (!statusFound) {
-                    // keep dropdown but no options
-                }
             }
 
-            // Populate Recent Notes list
             const notesList = document.getElementById('notes-list');
             if (notesList) {
                 notesList.innerHTML = "";
@@ -499,13 +530,17 @@
                     notesList.innerHTML = '<div style="padding:10px 0; color:#666;">No notes recorded yet.</div>';
                 }
             }
-
             
             if(!found) {
-                // If exercises aren't logged yet, still allow opening Analysis for Status/Notes if present
                 let hasStatus = false;
-                keys.forEach(k => { if (k.startsWith('status-')) hasStatus = true; });
-                if(!hasStatus) { alert("No data recorded yet."); return; }
+                let allKeys = new Set();
+                db.forEach(e => { if(e.data) Object.keys(e.data).forEach(k => allKeys.add(k)); });
+                allKeys.forEach(k => { if (k.startsWith('status-')) hasStatus = true; });
+                
+                if(!hasStatus && notesList.innerHTML.includes('No notes')) { 
+                    alert("No graphable data recorded yet."); 
+                    return; 
+                }
             }
             view.style.display = 'block'; 
         } else {
@@ -550,7 +585,6 @@
             options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: '#333' } }, x: { ticks: { color: '#888' } } }, plugins: { legend: { display: false } } }
         });
     }
-
 
     function updateStatusChart() {
         const key = document.getElementById('status-select') ? document.getElementById('status-select').value : "";
