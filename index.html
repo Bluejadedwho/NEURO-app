@@ -162,7 +162,7 @@
             <span style="color:#fff; font-weight:bold;">Analysis Hub</span>
         </div>
         <select id="trend-select" onchange="updateChart()" style="margin-bottom:10px;"><option value="">Select Exercise...</option></select>
-        <div class="chart-wrapper"><div class="chart-container"><canvas id="trendCanvas"></canvas></div></div>
+        <div class="chart-wrapper"><div class="chart-container"><canvas id="trendCanvas"></canvas></div>
         <div style="margin-top:18px; border-top:1px solid #333; padding-top:14px;">
             <div style="color:#fff; font-weight:bold; margin-bottom:10px;">Daily Status & Notes</div>
             <select id="status-select" onchange="updateStatusChart()" style="margin-bottom:10px;">
@@ -174,6 +174,8 @@
                 <div id="notes-list" style="max-height:170px; overflow-y:auto; border-top:1px solid #333;"></div>
             </div>
         </div>
+
+    </div>
     </div>
 
     <button class="btn btn-sec" onclick="openInfo()" style="margin-bottom:20px;">ℹ️ Program Guide</button>
@@ -219,7 +221,7 @@
             <h3>Knee Flexion <span class="desc-icon" onclick="toggleDesc(this)">❓</span></h3>
             <div class="desc-text"><strong>Protocol:</strong> Lie on your side. Slowly slide your heel up towards your buttock. Focus on the hamstring.</div>
             <div class="row"><div class="col"><label>Left Reps</label><input type="number" id="kneeflex-l" class="save-input" autocomplete="off"></div><div class="col"><label>Right Reps</label><input type="number" id="kneeflex-r" class="save-input" autocomplete="off"></div></div>
-            <div style="margin-top:5px;"><label>Assistance</label><select id="kneeflex-assist" class="save-input" autocomplete="off"><option value="">-</option><option value="Band/Hand">Band/Hand</option><option value="Active">Active</option><option value="Passive">Passive</option></select></div>
+            <div style="margin-top:5px;"><label>Assistance</label><select id="kneeflex-assist" class="save-input"><option value="Band/Hand">Band/Hand</option><option value="Active">Active</option><option value="Passive">Passive</option></select></div>
         </div>
         <div class="ex-group">
             <h3>Hip Lift (Abduction) <span class="desc-icon" onclick="toggleDesc(this)">❓</span></h3>
@@ -359,7 +361,6 @@
             document.querySelectorAll('.save-input').forEach(i => i.value = "");
             document.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
         }
-        restoreDrafts();
     }
 
     function loadToday() {
@@ -374,15 +375,6 @@
         }
     }
 
-    function restoreDrafts() {
-        document.querySelectorAll('.save-input').forEach(input => {
-            let savedDraft = localStorage.getItem('draft_' + input.id);
-            if (savedDraft !== null && input.id) {
-                input.value = savedDraft;
-            }
-        });
-    }
-
     function saveEntry() {
         const today = new Date().toLocaleDateString();
         let currentEntry = null;
@@ -390,12 +382,8 @@
         else { currentEntry = { id: Date.now(), date: today, data: {} }; db.unshift(currentEntry); }
 
         document.querySelectorAll('.save-input').forEach(input => {
-            if (input.value && input.value !== "0" && input.value !== "") {
-                currentEntry.data[input.id] = input.value;
-            } else {
-                delete currentEntry.data[input.id];
-            }
-            localStorage.removeItem('draft_' + input.id);
+            if (input.value && input.value !== "0" && input.value !== "") currentEntry.data[input.id] = input.value;
+            else delete currentEntry.data[input.id];
         });
 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
@@ -460,39 +448,25 @@
         if(isHidden) {
             const select = document.getElementById('trend-select');
             select.innerHTML = "<option value=\"\">Select Exercise...</option>";
-            
-            // BULLETPROOF FILTER: Only show exercises that actually have a number > 0 in history
-            let validGraphKeys = new Set();
-            db.forEach(e => {
-                if(e.data) {
-                    Object.entries(e.data).forEach(([k, v]) => {
-                        if(k !== 'daily-notes' && !k.startsWith('status-') && k !== 'kneeflex-assist') {
-                            let num = parseFloat(v);
-                            // If it's a valid number and greater than zero, it's allowed in the dropdown
-                            if(!isNaN(num) && num > 0) {
-                                validGraphKeys.add(k);
-                            }
-                        }
-                    });
-                }
-            });
+            let keys = new Set();
+            db.forEach(e => { if(e.data) Object.keys(e.data).forEach(k => keys.add(k)); });
             
             let found = false;
-            validGraphKeys.forEach(k => {
-                let label = k.replace(/-/g, ' ').toUpperCase();
-                let opt = document.createElement('option');
-                opt.value = k; opt.textContent = label;
-                select.appendChild(opt);
-                found = true;
+            keys.forEach(k => {
+                if(k !== 'daily-notes' && !k.startsWith('status-')) {
+                    let label = k.replace(/-/g, ' ').toUpperCase();
+                    let opt = document.createElement('option');
+                    opt.value = k; opt.textContent = label;
+                    select.appendChild(opt);
+                    found = true;
+                }
             });
 
+            // Populate Status dropdown (separate from exercises)
             const statusSelect = document.getElementById('status-select');
             if (statusSelect) {
                 statusSelect.innerHTML = '<option value="">Select Status Metric...</option>';
                 let statusFound = false;
-                let keys = new Set();
-                db.forEach(e => { if(e.data) Object.keys(e.data).forEach(k => keys.add(k)); });
-                
                 keys.forEach(k => {
                     if (k.startsWith('status-')) {
                         let label = k.replace(/status-/, '').replace(/-/g, ' ').toUpperCase();
@@ -502,8 +476,12 @@
                         statusFound = true;
                     }
                 });
+                if (!statusFound) {
+                    // keep dropdown but no options
+                }
             }
 
+            // Populate Recent Notes list
             const notesList = document.getElementById('notes-list');
             if (notesList) {
                 notesList.innerHTML = "";
@@ -521,17 +499,13 @@
                     notesList.innerHTML = '<div style="padding:10px 0; color:#666;">No notes recorded yet.</div>';
                 }
             }
+
             
             if(!found) {
+                // If exercises aren't logged yet, still allow opening Analysis for Status/Notes if present
                 let hasStatus = false;
-                let allKeys = new Set();
-                db.forEach(e => { if(e.data) Object.keys(e.data).forEach(k => allKeys.add(k)); });
-                allKeys.forEach(k => { if (k.startsWith('status-')) hasStatus = true; });
-                
-                if(!hasStatus && notesList.innerHTML.includes('No notes')) { 
-                    alert("No graphable data recorded yet."); 
-                    return; 
-                }
+                keys.forEach(k => { if (k.startsWith('status-')) hasStatus = true; });
+                if(!hasStatus) { alert("No data recorded yet."); return; }
             }
             view.style.display = 'block'; 
         } else {
@@ -576,6 +550,7 @@
             options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: '#333' } }, x: { ticks: { color: '#888' } } }, plugins: { legend: { display: false } } }
         });
     }
+
 
     function updateStatusChart() {
         const key = document.getElementById('status-select') ? document.getElementById('status-select').value : "";
