@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NeuroSync</title>
+    
+    <meta name="apple-mobile-web-app-title" content="NeuroSync">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#121212">
+    <link rel="apple-touch-icon" href="image.png">
+    <link rel="icon" type="image/png" href="image.png">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --primary: #38bdf8; --accent: #8b5cf6; --bg-body: #121212;
+            --bg-card: #1e1e1e; --bg-input: #2d2d2d; --text-main: #e0e0e0;
+            --text-dim: #888; --success: #22c55e; --danger: #ef4444;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-body); color: var(--text-main);
+            margin: 0; padding: 0; display: flex; justify-content: center;
+            min-height: 100vh; -webkit-tap-highlight-color: transparent;
+        }
+        #splash-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #000; z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: opacity 0.5s ease;
+        }
+        .splash-logo {
+            width: 140px; height: 140px; border-radius: 28px;
+            box-shadow: 0 0 40px rgba(56, 189, 248, 0.3); margin-bottom: 25px;
+            object-fit: cover; animation: pulseLogo 3s infinite ease-in-out;
+        }
+        .splash-btn {
+            margin-top: 40px; background: transparent; color: var(--primary);
+            border: 2px solid var(--primary); padding: 15px 40px; font-size: 1.2rem;
+            border-radius: 50px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 0 15px var(--primary), inset 0 0 10px var(--primary);
+            text-transform: uppercase; letter-spacing: 2px;
+        }
+        @keyframes pulseLogo { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.9; } 100% { transform: scale(1); opacity: 1; } }
+        
+        .container { display: none; width: 100%; max-width: 600px; padding: 20px; padding-bottom: 50px; }
+        .header-logo { width: 60px; height: 60px; border-radius: 14px; margin: 10px auto; display: block; object-fit: cover; }
+        h1 { text-align: center; color: var(--primary); font-size: 1.6rem; margin: 10px 0 5px 0; }
+        #date-display { text-align: center; color: var(--text-dim); font-size: 0.9rem; margin-bottom: 20px; }
+        .mute-toggle {
+            position: absolute; top: 20px; right: 20px; background: rgba(50,50,50,0.5);
+            border: 1px solid #444; color: var(--text-main); border-radius: 50%;
+            width: 40px; height: 40px; display: flex; justify-content: center;
+            align-items: center; font-size: 1.2rem; cursor: pointer;
+        }
+        input, select, textarea {
+            background-color: #383838; color: #fff; border: 1px solid #444;
+            padding: 12px; border-radius: 8px; width: 100%; font-size: 1rem;
+            box-sizing: border-box; margin-bottom: 5px; font-family: inherit;
+        }
+        .collapsible {
+            background-color: #2c2c2c; color: #fff; padding: 15px; width: 100%;
+            border: none; text-align: left; font-size: 1rem; font-weight: bold;
+            border-radius: 8px; margin-bottom: 8px; display: flex;
+            justify-content: space-between; align-items: center;
+        }
+        .content { padding: 0 5px; max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background-color: #252525; margin-bottom: 10px; border-radius: 0 0 8px 8px; }
+        .ex-group { background-color: var(--bg-input); padding: 15px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; }
+        .row { display: flex; gap: 10px; margin-top: 10px; }
+        .col { flex: 1; display: flex; flex-direction: column; }
+        label { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 4px; font-weight: bold; }
+        .sub-lbl { color: var(--primary); font-size: 0.75rem; text-transform: uppercase; font-weight: bold; }
+        .target { color: #666; font-size: 0.75rem; margin-left: 4px; }
+        
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        .btn-main { background: linear-gradient(135deg, var(--primary), var(--accent)); color: #000; box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3); }
+        .btn-blue { background: #2563eb; color: #fff; }
+        .btn-purple { background: var(--accent); color: #fff; }
+        .btn-red { background: var(--danger); color: #fff; }
+        .btn-sec { background: #333; color: #ccc; border: 1px solid #555; }
+        
+        #history-list { max-height: 250px; overflow-y: auto; margin-top: 15px; border-top: 1px solid #333; }
+        .hist-item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #333; align-items: center; }
+        .hist-del { color: var(--danger); background: none; border: none; font-size: 1.2rem; padding: 0 10px; }
+        
+        #analysis-view { display: none; background: #222; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #444; }
+        .chart-wrapper { width: 100%; overflow-x: auto; padding-bottom: 10px; }
+        .chart-container { height: 250px; min-width: 100%; position: relative; }
+        
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; justify-content: center; align-items: center; overflow-y: auto; }
+        .modal-card { background: var(--bg-card); padding: 25px; border-radius: 16px; width: 85%; max-width: 400px; border: 1px solid #444; position: relative; max-height: 90vh; overflow-y: auto; }
+        .desc-text { display: none; background: #333; padding: 10px; border-left: 3px solid var(--primary); color: #ccc; font-size: 0.95rem; line-height: 1.5; margin-bottom: 15px; }
+        .hidden { display: none !important; }
+        
+        .pin-dots { display: flex; justify-content: center; gap: 10px; margin: 20px 0; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; background: #444; transition: 0.2s; }
+        .dot.filled { background: var(--primary); box-shadow: 0 0 10px var(--primary); }
+        .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
+        .num-btn { background: #333; color: #fff; padding: 15px; border-radius: 8px; font-size: 1.2rem; border: none; }
+        
+        .modal-card h2 { color: var(--primary); margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .modal-card h3 { color: #fff; font-size: 1.1rem; margin-top: 20px; margin-bottom: 5px; }
+        .modal-card p { color: #ccc; font-size: 0.95rem; line-height: 1.6; margin-bottom: 15px; }
+        .modal-card li { color: #ccc; margin-bottom: 8px; line-height: 1.4; }
+    </style>
+</head>
+<body>
+
+<audio id="bg-music" loop></audio>
+
+<div id="splash-screen">
+    <img src="image.png" class="splash-logo" onerror="this.style.display='none'">
+    <h1 style="font-size: 2rem;">NeuroSync</h1>
+    <p style="color: #888; margin-bottom: 30px;">Daily AMN & Activity Tracker</p>
+    <button class="splash-btn" onclick="enterApp()">ENTER SYSTEM</button>
+</div>
+
+<div id="info-modal" class="modal-overlay" onclick="closeInfo(event)">
+    <div class="modal-card">
+        <h2>NeuroSync Program Protocol</h2>
+        <h3>1. The Core Philosophy</h3>
+        <p>This is not a strength workout; it is <strong>Neuromuscular Re-education</strong>. In AMN, the signal from the brain to the legs is "noisy" or degraded.</p>
+        <p>Our goal is to reduce that noise by removing gravity (Bed/Side-Lying) and slowing down. We are trying to teach your brain to find the specific muscle pathway again without using "helper" muscles (compensation).</p>
+        <h3>2. The Golden Rules</h3>
+        <ul>
+            <li><strong>Quality > Quantity:</strong> 10 perfect reps where you feel the right muscle are better than 50 sloppy ones.</li>
+            <li><strong>Stop at Fatigue:</strong> As soon as your form breaks or your leg starts shaking uncontrollably, stop. That is your nervous system saying "I'm done listening."</li>
+            <li><strong>No Momentum:</strong> Do not swing your leg. Lift it with control, hold it with control, lower it with control.</li>
+        </ul>
+        <h3>3. Progression Strategy</h3>
+        <p>Start with the Bed-Based and Side-Lying sections. Only move to Functional Standing work when you feel confident and stable.</p>
+        <button class="btn btn-sec" onclick="closeInfo(null)">Close Guide</button>
+    </div>
+</div>
+
+<div id="pin-modal" class="modal-overlay">
+    <div class="modal-card" style="text-align:center;">
+        <h2 id="pin-title" style="color:var(--primary);margin:0;">Security Check</h2>
+        <div class="pin-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        <div class="numpad">
+            <button class="num-btn" onclick="pressPin(1)">1</button><button class="num-btn" onclick="pressPin(2)">2</button><button class="num-btn" onclick="pressPin(3)">3</button>
+            <button class="num-btn" onclick="pressPin(4)">4</button><button class="num-btn" onclick="pressPin(5)">5</button><button class="num-btn" onclick="pressPin(6)">6</button>
+            <button class="num-btn" onclick="pressPin(7)">7</button><button class="num-btn" onclick="pressPin(8)">8</button><button class="num-btn" onclick="pressPin(9)">9</button>
+            <button class="num-btn" style="background:transparent;"></button><button class="num-btn" onclick="pressPin(0)">0</button><button class="num-btn" style="color:var(--danger);" onclick="pressPin('del')">⌫</button>
+        </div>
+        <button id="cancel-pin-btn" class="btn btn-sec hidden" style="margin-top:15px;" onclick="closePinModal()">Cancel</button>
+    </div>
+</div>
+
+<div class="container" id="main-app">
+    <button class="mute-toggle" onclick="toggleMusic()">🔊</button>
+    <img src="image.png" class="header-logo" onerror="this.style.display='none'">
+    <h1>NeuroSync</h1>
+    <div id="date-display">...</div>
+
+    <div id="analysis-view">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <button onclick="toggleAnalysis()" style="background:none; border:none; color:var(--primary); font-weight:bold;">⬅ Back</button>
+            <span style="color:#fff; font-weight:bold;">Analysis Hub</span>
+        </div>
+        <select id="trend-select" onchange="updateChart()" style="margin-bottom:10px;"><option value="">Select Exercise...</option></select>
+        <div class="chart-wrapper"><div class="chart-container"><canvas id="trendCanvas"></canvas></div>
+        <div style="margin-top:18px; border-top:1px solid #333; padding-top:14px;">
+            <div style="color:#fff; font-weight:bold; margin-bottom:10px;">Daily Status & Notes</div>
+            <select id="status-select" onchange="updateStatusChart()" style="margin-bottom:10px;">
+                <option value="">Select Status Metric...</option>
+            </select>
+            <div class="chart-wrapper"><div class="chart-container"><canvas id="statusCanvas"></canvas></div></div>
+            <div style="margin-top:12px;">
+                <div style="color:#ccc; font-weight:bold; margin-bottom:8px;">Recent Notes</div>
+                <div id="notes-list" style="max-height:170px; overflow-y:auto; border-top:1px solid #333;"></div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <button class="btn btn-sec" onclick="openInfo()" style="margin-bottom:20px;">ℹ️ Program Guide</button>
+
+    <button class="collapsible">0. Daily Status & Notes</button>
+    <div class="content">
+        <div class="ex-group" data-sec="Check-In">
+            <div class="row">
+                <div class="col"><label>Sleep (10=Best)</label><select class="save-input" id="status-sleep" autocomplete="off"><option value="0">-</option><option value="1">1 - Terrible</option><option value="5">5 - Moderate</option><option value="10">10 - Great</option></select></div>
+                <div class="col"><label>Energy (10=Best)</label><select class="save-input" id="status-energy" autocomplete="off"><option value="0">-</option><option value="1">1 - Low</option><option value="5">5 - Okay</option><option value="10">10 - High</option></select></div>
+            </div>
+            <div class="row">
+                <div class="col"><label>Pain (10=Worst)</label><select class="save-input" id="status-pain" autocomplete="off"><option value="0">-</option><option value="1">1 - Low</option><option value="5">5 - Moderate</option><option value="10">10 - Severe</option></select></div>
+                <div class="col"><label>Spasticity (10=Worst)</label><select class="save-input" id="status-spasticity" autocomplete="off"><option value="0">-</option><option value="1">1 - Loose</option><option value="5">5 - Moderate</option><option value="10">10 - Tight</option></select></div>
+            </div>
+            <div class="row"><div class="col"><label>Balance (10=Best)</label><select class="save-input" id="status-balance" autocomplete="off"><option value="0">-</option><option value="1">1 - Unstable</option><option value="5">5 - Okay</option><option value="10">10 - Steady</option></select></div></div>
+            <div style="margin-top:10px;"><label>Daily Notes</label><textarea id="daily-notes" class="save-input" placeholder="Notes..." autocomplete="off"></textarea></div>
+        </div>
+    </div>
+
+    <button class="collapsible">1. Bed-Based Activation</button>
+    <div class="content">
+        <div class="ex-group">
+            <h3>Straight Leg Raises <span class="desc-icon" onclick="toggleDesc(this)">❓</span></h3>
+            <div class="desc-text"><strong>Protocol:</strong> Lie completely flat on your back. Keep your knee locked straight (active quad). Lift the leg slowly to about 45 degrees. Hold for 1 second, then lower slowly.</div>
+            <div class="row"><div class="col"><label>Left Reps</label><input type="number" id="slr-l" class="save-input" autocomplete="off"></div><div class="col"><label>Right Reps</label><input type="number" id="slr-r" class="save-input" autocomplete="off"></div></div>
+        </div>
+        <div class="ex-group">
+            <h3>Quad Sets <span class="desc-icon" onclick="toggleDesc(this)">❓</span></h3>
+            <div class="desc-text"><strong>Protocol:</strong> Place a small rolled towel under your knee if needed. Press the back of your knee firmly down into the bed to engage the thigh muscle. Hold for 5 full seconds.</div>
+            <input type="number" id="quad-sets" class="save-input" autocomplete="off" placeholder="Total Holds">
+        </div>
+        <div class="ex-group">
+            <h3>Ankle Pumps <span class="desc-icon" onclick="toggleDesc(this)">❓</span></h3>
+            <div class="desc-text"><strong>Protocol:</strong> Pull your toes up toward your nose (dorsiflexion), then point them down. Then do slow circles.</div>
+            <div class="row"><div class="col"><label>Time Left</label><input type="text" id="ankle-l" class="save-input" autocomplete="off"></div><div class="col"><label>Time Right</label><input type="text" id="ankle-r" class="save-input" autocomplete="off"></div></div>
+        </div>
+    </div>
+
+    <button class="collapsible">2. Side-Lying Activation</button>
+    <div class="content">
+        <div class="ex-group">
+            <h3>Knee Flexion <span class="desc-icon" onclick="toggleDesc(this)">❓</span></h3>
+            <div class="desc-text"><strong>Protocol:</strong> Lie on your side. Slowly slide your heel up towards your buttock. Focus on the hamstring.</div>
+            <div class="row"><div class="col"><label>Left Reps</label><input type="number" id="kneeflex-l" class="save-input" autocomplete="off"></div><div class="col"><label>Right Reps</label><input type="number" id="kneeflex-r" class="save-input" autocomplete="off"></div></div>
+            <div style="margin-top:5px;"><label>Assistance</label><select id="kneeflex-assist" class="save-input"><option value="Band/Hand">Band/Hand</option><option value="Active">Active</option><option value="Passive">Passive</option></select></div>
+        </div>
+        <div class="ex-group">
+            <h3>Hip Lift (Abduction) <span class="desc-icon" onclick="toggleDesc(this)">❓</span></h3>
+            <div class="desc-text"><strong>Protocol:</strong> Lie on your side. Lift the top leg straight up. Keep hips "stacked".</div>
+            <div class="row"><div class="col"><label>Left Reps</label><input type="number" id="hiplift-l" class="save-input" autocomplete="off"></div><div class="col"><label>Right Reps</label><input type="number" id="hiplift-r" class="save-input" autocomplete="off"></div></div>
+        </div>
+        <div class="ex-group">
+            <h3>Hip Press (Clam) <span class="desc-icon" onclick="toggleDesc(this)">❓</span></h3>
+            <div class="desc-text"><strong>Protocol:</strong> Lie on side, knees bent 90°. Lift top knee (clamshell) then press it back down firmly.</div>
+            <div class="row"><div class="col"><label>Left Holds</label><input type="number" id="hippress-l" class="save-input" autocomplete="off"></div><div class="col"><label>Right Holds</label><input type="number" id="hippress-r" class="save-input" autocomplete="off"></div></div>
+        </div>
+    </div>
+
+    <button class="collapsible">3. Seated Activation</button>
+    <div class="content">
+        <div class="ex-group">
+            <h3>Seated Hip Flexion <span class="desc-icon" onclick="toggleDesc(this)">❓</span></h3>
+            <div class="desc-text"><strong>Protocol:</strong> Sit in a chair. Lift one foot off the floor as high as you can without using hands.</div>
+            <div class="row">
+                <div class="col">
+                    <span class="sub-lbl">Left</span>
+                    <input type="number" id="seated-flex-height-l" class="save-input" placeholder="Height (cm)" autocomplete="off">
+                    <input type="number" id="seated-flex-time-l" class="save-input" placeholder="Time (s)" autocomplete="off">
+                    <input type="number" id="seated-flex-reps-l" class="save-input" placeholder="Reps" autocomplete="off">
+                </div>
+                <div class="col">
+                    <span class="sub-lbl">Right</span>
+                    <input type="number" id="seated-flex-height-r" class="save-input" placeholder="Height (cm)" autocomplete="off">
+                    <input type="number" id="seated-flex-time-r" class="save-input" placeholder="Time (s)" autocomplete="off">
+                    <input type="number" id="seated-flex-reps-r" class="save-input" placeholder="Reps" autocomplete="off">
+                </div>
+            </div>
+        </div>
+        <div class="ex-group">
+            <h3>Seated Leg Hold <span class="desc-icon" onclick="toggleDesc(this)">❓</span></h3>
+            <div class="desc-text"><strong>Protocol:</strong> Lift your knee toward your chest (use hands if needed). Let go and hold.</div>
+            <div class="row">
+                <div class="col"><span class="sub-lbl">Left</span><input type="text" id="seated-hold-l" class="save-input" placeholder="Avg Hold" autocomplete="off"><input type="number" id="seated-lift-reps-l" class="save-input" placeholder="Reps" autocomplete="off"></div>
+                <div class="col"><span class="sub-lbl">Right</span><input type="text" id="seated-hold-r" class="save-input" placeholder="Avg Hold" autocomplete="off"><input type="number" id="seated-lift-reps-r" class="save-input" placeholder="Reps" autocomplete="off"></div>
+            </div>
+        </div>
+    </div>
+
+    <button class="collapsible">4/5. Functional</button>
+    <div class="content">
+        <div class="ex-group"><h3>Mini-Bike</h3><input type="number" id="bike" class="save-input" placeholder="Minutes" autocomplete="off"></div>
+        <div class="ex-group"><h3>Squats</h3><input type="number" id="squats" class="save-input" placeholder="Reps" autocomplete="off"></div>
+        <div class="ex-group"><h3>Weight Shifts</h3><input type="text" id="weight-shifts" class="save-input" placeholder="Time" autocomplete="off"></div>
+        <div class="ex-group"><h3>Marching</h3><div class="row"><div class="col"><input type="number" id="march-l" class="save-input" placeholder="Left" autocomplete="off"></div><div class="col"><input type="number" id="march-r" class="save-input" placeholder="Right" autocomplete="off"></div></div></div>
+    </div>
+
+    <button class="collapsible">Optional: Glute Activation</button>
+    <div class="content">
+        <div class="ex-group"><h3>Isometric Glute Squeeze</h3><input type="number" id="glute-squeeze" class="save-input" placeholder="Total Reps" autocomplete="off"></div>
+    </div>
+
+    <div style="margin-top:30px; border-top:1px solid #333; padding-top:20px;">
+        <button id="save-btn" class="btn btn-main" onclick="saveEntry()">UPDATE DAILY LOG (Auto-Save)</button>
+        <div class="row">
+            <button class="btn btn-blue" onclick="toggleAnalysis()">📊 Analysis</button>
+            <button class="btn btn-purple" onclick="exportData()">📤 Backup</button>
+        </div>
+        <div class="row">
+            <button class="btn btn-sec" onclick="setupPin()">🔒 Set PIN</button>
+            <label class="btn btn-sec" style="text-align:center; padding:14px; margin:0; cursor:pointer;">
+                📥 Restore <input type="file" id="import-file" style="display:none;" accept=".json" multiple onchange="importData(this)">
+            </label>
+        </div>
+        <div id="history-list"></div>
+        <button class="btn btn-red" onclick="resetAll()" style="margin-top:20px;">⚠ Reset App</button>
+    </div>
+</div>
+
+<script>
+    const STORAGE_KEY = 'neurosync_db';
+    const PIN_KEY = 'neurosync_pin';
+    let db = [];
+    let pinInput = "";
+    let isSettingUpPin = false;
+
+    window.addEventListener('load', () => {
+        document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') loadData(); });
+        loadData();
+        
+        document.querySelectorAll('.save-input').forEach(input => {
+            input.addEventListener('input', function() { if(this.id) localStorage.setItem('draft_' + this.id, this.value); });
+        });
+
+        const now = new Date();
+        document.getElementById('date-display').textContent = now.toLocaleDateString(undefined, {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+        
+        document.querySelectorAll('.collapsible').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.classList.toggle('active-col');
+                let content = this.nextElementSibling;
+                content.style.maxHeight = content.style.maxHeight ? null : content.scrollHeight + "px";
+            });
+        });
+    });
+
+    function enterApp() {
+        const splash = document.getElementById('splash-screen');
+        splash.style.opacity = '0';
+        setTimeout(() => { splash.style.display = 'none'; }, 500);
+        const playlist = ["track1.mp3", "track2.mp3", "track3.mp3"];
+        const audio = document.getElementById('bg-music');
+        audio.src = playlist[Math.floor(Math.random() * playlist.length)];
+        audio.volume = 0.3; 
+        audio.play().catch(e => console.log("Waiting"));
+        checkLock();
+    }
+
+    function toggleMusic() {
+        const audio = document.getElementById('bg-music');
+        const btn = document.querySelector('.mute-toggle');
+        if (audio.paused) { audio.play(); btn.textContent = "🔊"; } else { audio.pause(); btn.textContent = "🔇"; }
+    }
+
+    function toggleDesc(el) {
+        const text = el.parentElement.nextElementSibling;
+        const isHidden = text.style.display === "none" || text.style.display === "";
+        text.style.display = isHidden ? "block" : "none";
+        const parent = el.closest('.content');
+        if (parent) parent.style.maxHeight = parent.scrollHeight + "px";
+    }
+
+    function openInfo() { document.getElementById('info-modal').style.display = 'flex'; }
+    function closeInfo(e) { if(!e || e.target.id === 'info-modal' || e.target.tagName === 'BUTTON') document.getElementById('info-modal').style.display = 'none'; }
+
+    // --- DATA HANDLING ---
+    function loadData() {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(raw) { 
+            try { db = JSON.parse(raw); renderHistory(); loadToday(); } 
+            catch(e) { console.error(e); } 
+        } else {
+            document.querySelectorAll('.save-input').forEach(i => i.value = "");
+            document.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
+        }
+        restoreDrafts();
+    }
+
+    function loadToday() {
+        if (db.length === 0) return;
+        const lastEntry = db[0];
+        const today = new Date().toLocaleDateString();
+        if (lastEntry.date === today) {
+            Object.keys(lastEntry.data).forEach(key => {
+                const input = document.getElementById(key);
+                if (input) input.value = lastEntry.data[key];
+            });
+        }
+    }
+
+    function restoreDrafts() {
+        document.querySelectorAll('.save-input').forEach(input => {
+            let savedDraft = localStorage.getItem('draft_' + input.id);
+            if (savedDraft !== null && input.id) {
+                input.value = savedDraft;
+            }
+        });
+    }
+
+    function saveEntry() {
+        const today = new Date().toLocaleDateString();
+        let currentEntry = null;
+        if (db.length > 0 && db[0].date === today) currentEntry = db[0];
+        else { currentEntry = { id: Date.now(), date: today, data: {} }; db.unshift(currentEntry); }
+
+        document.querySelectorAll('.save-input').forEach(input => {
+            if (input.value && input.value !== "0" && input.value !== "") {
+                currentEntry.data[input.id] = input.value;
+            } else {
+                delete currentEntry.data[input.id];
+            }
+            localStorage.removeItem('draft_' + input.id);
+        });
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+        renderHistory();
+
+        const btn = document.getElementById('save-btn');
+        const origText = btn.textContent;
+        btn.textContent = "✅ SAVED";
+        btn.style.background = "var(--success)";
+        setTimeout(() => { btn.textContent = origText; btn.style.background = ""; }, 1500);
+    }
+
+    function resetAll() {
+        if(confirm("Wipe ALL history and reset?")) {
+            localStorage.clear(); 
+            document.querySelectorAll('.save-input').forEach(i => i.value = "");
+            document.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
+            db = [];
+            location.reload();
+        }
+    }
+
+    function exportData() {
+        const blob = new Blob([JSON.stringify(db, null, 2)], {type: 'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'NeuroSync_Backup.json';
+        a.click();
+    }
+
+    function importData(input) {
+        if(!input.files.length) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const json = JSON.parse(e.target.result);
+                if(Array.isArray(json)) db = json; 
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+                alert("Restored!");
+                location.reload();
+            } catch(e) { alert("Error reading file"); }
+        };
+        reader.readAsText(input.files[0]);
+    }
+
+    function renderHistory() {
+        const list = document.getElementById('history-list');
+        list.innerHTML = "";
+        db.slice(0, 10).forEach(e => {
+            let count = e.data ? Object.keys(e.data).length : 0;
+            const div = document.createElement('div');
+            div.className = 'hist-item';
+            div.innerHTML = `<span>${e.date} <small>(${count} items)</small></span>`;
+            list.appendChild(div);
+        });
+    }
+
+    function toggleAnalysis() {
+        const view = document.getElementById('analysis-view');
+        const isHidden = view.style.display === 'none' || view.style.display === '';
+        
+        if(isHidden) {
+            const select = document.getElementById('trend-select');
+            select.innerHTML = "<option value=\"\">Select Exercise...</option>";
+            let keys = new Set();
+            db.forEach(e => { if(e.data) Object.keys(e.data).forEach(k => keys.add(k)); });
+            
+            let found = false;
+            keys.forEach(k => {
+                if(k !== 'daily-notes' && !k.startsWith('status-')) {
+                    let label = k.replace(/-/g, ' ').toUpperCase();
+                    let opt = document.createElement('option');
+                    opt.value = k; opt.textContent = label;
+                    select.appendChild(opt);
+                    found = true;
+                }
+            });
+
+            const statusSelect = document.getElementById('status-select');
+            if (statusSelect) {
+                statusSelect.innerHTML = '<option value="">Select Status Metric...</option>';
+                let statusFound = false;
+                keys.forEach(k => {
+                    if (k.startsWith('status-')) {
+                        let label = k.replace(/status-/, '').replace(/-/g, ' ').toUpperCase();
+                        let opt = document.createElement('option');
+                        opt.value = k; opt.textContent = label;
+                        statusSelect.appendChild(opt);
+                        statusFound = true;
+                    }
+                });
+            }
+
+            const notesList = document.getElementById('notes-list');
+            if (notesList) {
+                notesList.innerHTML = "";
+                db.slice(0, 14).forEach(e => {
+                    const note = e.data ? e.data['daily-notes'] : "";
+                    if (note && String(note).trim() !== "") {
+                        const row = document.createElement('div');
+                        row.style.padding = "10px 0";
+                        row.style.borderBottom = "1px solid #333";
+                        row.innerHTML = `<div style="color:#888; font-size:0.85rem; margin-bottom:4px;">${e.date}</div><div style="color:#ccc; white-space:pre-wrap;">${String(note)}</div>`;
+                        notesList.appendChild(row);
+                    }
+                });
+                if (!notesList.innerHTML) {
+                    notesList.innerHTML = '<div style="padding:10px 0; color:#666;">No notes recorded yet.</div>';
+                }
+            }
+            
+            if(!found) {
+                let hasStatus = false;
+                keys.forEach(k => { if (k.startsWith('status-')) hasStatus = true; });
+                if(!hasStatus) { alert("No data recorded yet."); return; }
+            }
+            view.style.display = 'block'; 
+        } else {
+            view.style.display = 'none';
+        }
+    }
+
+    // --- PIN SYSTEM ---
+    function checkLock() { if(localStorage.getItem(PIN_KEY)) showPinModal("Enter PIN"); else document.querySelector('.container').style.display = 'block'; }
+    function setupPin() { isSettingUpPin = true; showPinModal("Create New PIN"); document.getElementById('cancel-pin-btn').classList.remove('hidden'); }
+    function showPinModal(title) { document.getElementById('pin-modal').style.display = 'flex'; document.getElementById('pin-title').textContent = title; pinInput = ""; updateDots(); }
+    function closePinModal() { document.getElementById('pin-modal').style.display = 'none'; pinInput = ""; isSettingUpPin = false; document.getElementById('cancel-pin-btn').classList.add('hidden'); }
+    function pressPin(num) { if(num === 'del') pinInput = pinInput.slice(0, -1); else if (pinInput.length < 4) pinInput += num; updateDots(); if(pinInput.length === 4) setTimeout(handlePinSubmit, 200); }
+    function updateDots() { const dots = document.querySelectorAll('.dot'); dots.forEach((d, i) => { if(i < pinInput.length) d.classList.add('filled'); else d.classList.remove('filled'); }); }
+    function handlePinSubmit() { const stored = localStorage.getItem(PIN_KEY); if(isSettingUpPin) { localStorage.setItem(PIN_KEY, pinInput); alert("PIN Set!"); closePinModal(); } else { if(pinInput === stored) { closePinModal(); document.querySelector('.container').style.display = 'block'; } else { alert("Incorrect"); pinInput = ""; updateDots(); } } }
+
+    let chartInstance = null;
+    let statusChartInstance = null;
+    function updateChart() {
+        const key = document.getElementById('trend-select').value;
+        if(!key) return;
+        const grouped = {};
+        db.slice().reverse().forEach(e => {
+            if(e.date) {
+                const d = e.date.split(',')[0];
+                const v = parseFloat(e.data ? e.data[key] : 0) || 0;
+                if(v > 0) grouped[d] = v;
+            }
+        });
+        const labels = Object.keys(grouped);
+        const values = Object.values(grouped);
+        
+        const ctx = document.getElementById('trendCanvas').getContext('2d');
+        if(chartInstance) chartInstance.destroy();
+        
+        const container = document.querySelector('.chart-container');
+        container.style.width = Math.max(100, labels.length * 50) + "%";
+
+        chartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: labels, datasets: [{ label: key, data: values, backgroundColor: '#38bdf8', borderRadius: 4 }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: '#333' } }, x: { ticks: { color: '#888' } } }, plugins: { legend: { display: false } } }
+        });
+    }
+
+    function updateStatusChart() {
+        const key = document.getElementById('status-select') ? document.getElementById('status-select').value : "";
+        if(!key) return;
+
+        const grouped = {};
+        db.slice().reverse().forEach(e => {
+            if(e.date) {
+                const d = e.date.split(',')[0];
+                const raw = e.data ? e.data[key] : "";
+                const v = parseFloat(raw);
+                if(!isNaN(v)) grouped[d] = v;
+            }
+        });
+
+        const labels = Object.keys(grouped);
+        const values = Object.values(grouped);
+
+        const canvas = document.getElementById('statusCanvas');
+        if(!canvas) return;
+        const ctx = canvas.getContext('2d');
+
+        if(statusChartInstance) statusChartInstance.destroy();
+
+        const container = canvas.closest('.chart-container');
+        if(container) container.style.width = Math.max(100, labels.length * 50) + "%";
+
+        statusChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: { labels: labels, datasets: [{ label: key, data: values, tension: 0.25, fill: false, borderColor: '#8b5cf6', pointRadius: 3 }] },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true, suggestedMax: 10, grid: { color: '#333' } }, x: { ticks: { color: '#888' } } },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+</script>
+</body>
+</html>
