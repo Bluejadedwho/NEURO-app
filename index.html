@@ -66,6 +66,7 @@
             border: none; text-align: left; font-size: 1rem; font-weight: bold;
             border-radius: 8px; margin-bottom: 8px; display: flex;
             justify-content: space-between; align-items: center;
+            cursor: pointer;
         }
         .content { padding: 0 5px; max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background-color: #252525; margin-bottom: 10px; border-radius: 0 0 8px 8px; }
         .ex-group { background-color: var(--bg-input); padding: 15px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; }
@@ -105,6 +106,15 @@
         .modal-card h3 { color: #fff; font-size: 1.1rem; margin-top: 20px; margin-bottom: 5px; }
         .modal-card p { color: #ccc; font-size: 0.95rem; line-height: 1.6; margin-bottom: 15px; }
         .modal-card li { color: #ccc; margin-bottom: 8px; line-height: 1.4; }
+
+        /* Custom styles for the Framework collapsible details */
+        details.framework-mod { background-color: #2c2c2c; border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+        details.framework-mod summary { padding: 15px; font-weight: bold; color: var(--primary); cursor: pointer; list-style: none; position: relative; outline: none; }
+        details.framework-mod summary::-webkit-details-marker { display: none; }
+        .framework-summary-title { display: flex; justify-content: space-between; align-items: center; }
+        .framework-summary-text { color: var(--text-dim); font-size: 0.85rem; font-weight: normal; display: block; margin-top: 5px; }
+        .framework-content { padding: 15px; background-color: #252525; color: #e0e0e0; font-size: 0.95rem; line-height: 1.5; border-top: 1px solid #444; }
+        .framework-content ul { margin-top: 5px; padding-left: 20px; }
     </style>
 </head>
 <body>
@@ -133,6 +143,190 @@
         <h3>3. Progression Strategy</h3>
         <p>Start with the Bed-Based and Side-Lying sections. Only move to Functional Standing work when you feel confident and stable.</p>
         <button class="btn btn-sec" onclick="closeInfo(null)">Close Guide</button>
+    </div>
+</div>
+
+<div id="framework-modal" class="modal-overlay" onclick="closeFramework(event)">
+    <div class="modal-card">
+        <h2>Precision Before Power</h2>
+        <p style="color:var(--text-dim); margin-top:-5px; margin-bottom:20px;">My AMN Motor & Stability Framework</p>
+
+        <details class="framework-mod">
+            <summary>
+                <div class="framework-summary-title"><span>MODULE 0 – System Anchor</span><span style="color:var(--text-dim)">▼</span></div>
+                <span class="framework-summary-text">My system is impaired, not broken. It is trainable.</span>
+            </summary>
+            <div class="framework-content">
+                <p>This is not paralysis.<br>This is not structural collapse.<br>This is not uncontrollable spastic rigidity.</p>
+                <p>This is a motor-drive dominant upper motor neuron pattern within AMN. The corticospinal pathway (the voluntary motor signal from brain to spinal cord) is degraded, but not absent.</p>
+                <strong>Key evidence:</strong>
+                <ul>
+                    <li>Passive range is preserved.</li>
+                    <li>Slow movement improves control.</li>
+                    <li>Side-lying tasks work better than standing.</li>
+                    <li>Patterned gait produces movement.</li>
+                    <li>Band feedback improves performance.</li>
+                    <li>Pain varies with stress, sleep, and speed.</li>
+                </ul>
+                <p>If the pathway were absent, none of those would occur.<br>Speed reveals noise.<br>Slow reveals control.</p>
+                <p>Compensation is not failure. It is adaptation.<br>Pain is influenced by load, shear, and sympathetic state. That means it is modifiable.</p>
+                <p>This phenotype is often more trainable than rigid spastic forms because motor units are intact, range is preserved, context changes performance, and precision improves output.</p>
+                <p>The goal is not force. The goal is signal quality.<br><br>Precision before power.<br>Stability before speed.<br>Consistency before intensity.<br><br>Improvement depends on context, not aggression.</p>
+            </div>
+        </details>
+
+        <details class="framework-mod">
+            <summary>
+                <div class="framework-summary-title"><span>MODULE 1 – My Motor Pattern</span><span style="color:var(--text-dim)">▼</span></div>
+                <span class="framework-summary-text">Motor-drive dominant upper motor neuron pattern with preserved passive range and speed-sensitive control.</span>
+            </summary>
+            <div class="framework-content">
+                <p>I have spinal adrenomyeloneuropathy (AMN) affecting the corticospinal tracts (the primary voluntary motor pathways from brain to spinal cord).</p>
+                [attachment_0](attachment)
+                <p>This results in:</p>
+                <ul>
+                    <li>Sustained clonus (repetitive reflex contractions)</li>
+                    <li>Positive Babinski sign (upper motor neuron reflex)</li>
+                    <li>Impaired voluntary motor drive</li>
+                    <li>Speed-dependent movement breakdown</li>
+                    <li>Co-contraction (simultaneous activation of opposing muscles)</li>
+                    <li>Preserved passive range of motion</li>
+                </ul>
+                <p>My phenotype is motor-drive dominant rather than severe spasticity dominant.<br><br>This means:<br>The pathway is impaired, not absent.<br>Slow movement improves performance.<br>Speed amplifies motor noise.<br><br>This is neurologically coherent and trainable.</p>
+            </div>
+        </details>
+
+        <details class="framework-mod">
+            <summary>
+                <div class="framework-summary-title"><span>MODULE 2 – Compensation & Pain</span><span style="color:var(--text-dim)">▼</span></div>
+                <span class="framework-summary-text">How neurological drive limitations lead to pelvic shear and buttock pain.</span>
+            </summary>
+            <div class="framework-content">
+                <p>Reduced voluntary hip flexion and extension drive leads to:</p>
+                <p>Myelopathy<br>→ Reduced motor recruitment<br>→ Hip hiking<br>→ Trunk momentum substitution<br>→ Pelvic shear (micro-sliding forces at the sacroiliac joint)<br>→ Deep rotator overwork<br>→ Buttock pain<br>→ Sympathetic amplification during flares</p>
+                [attachment_1](attachment)
+                <p>Pelvic shear = small asymmetrical forces across the sacroiliac joint when stability is compromised.</p>
+                <p>The SI belt reduces shear by increasing compression.<br>Pain variability proves this system is modifiable.</p>
+            </div>
+        </details>
+
+        <details class="framework-mod">
+            <summary>
+                <div class="framework-summary-title"><span>MODULE 3 – Speed Rule</span><span style="color:var(--text-dim)">▼</span></div>
+                <span class="framework-summary-text">Slow is therapeutic.</span>
+            </summary>
+            <div class="framework-content">
+                <strong>Fast walking increases:</strong>
+                <ul>
+                    <li>Velocity-dependent tone</li>
+                    <li>Co-contraction</li>
+                    <li>Hip hiking amplitude</li>
+                    <li>Pelvic shear</li>
+                    <li>Fatigue & Pain risk</li>
+                </ul>
+                <strong>Slow walking improves:</strong>
+                <ul>
+                    <li>Motor planning</li>
+                    <li>Signal-to-noise ratio</li>
+                    <li>Symmetry</li>
+                    <li>Stability</li>
+                </ul>
+                <p>Momentum is compensation.<br>Precision is progress.</p>
+            </div>
+        </details>
+
+        <details class="framework-mod">
+            <summary>
+                <div class="framework-summary-title"><span>MODULE 4 – Flare Protocol</span><span style="color:var(--text-dim)">▼</span></div>
+                <span class="framework-summary-text">When pain is high, reduce shear and signal overload.</span>
+            </summary>
+            <div class="framework-content">
+                <strong>Do:</strong>
+                <ul>
+                    <li>Wear SI belt</li>
+                    <li>Use firm upright seating</li>
+                    <li>Limit sitting blocks</li>
+                    <li>Quad sets & Ankle pumps</li>
+                    <li>Gentle glute activation</li>
+                    <li>Slow side-lying knee flexion (pelvis stacked)</li>
+                </ul>
+                <strong>Avoid:</strong>
+                <ul>
+                    <li>Clamshells</li>
+                    <li>Side-lying hip abduction</li>
+                    <li>Forcing standing hip extension</li>
+                    <li>High-speed walking</li>
+                    <li>Deep couch sitting</li>
+                </ul>
+            </div>
+        </details>
+
+        <details class="framework-mod">
+            <summary>
+                <div class="framework-summary-title"><span>MODULE 5 – Build Phase</span><span style="color:var(--text-dim)">▼</span></div>
+                <span class="framework-summary-text">Train signal quality before load.</span>
+            </summary>
+            <div class="framework-content">
+                <strong>Begin with:</strong>
+                <ul>
+                    <li>Supine glute activation</li>
+                    <li>Small bridges</li>
+                    <li>Prone assisted hip extension</li>
+                    <li>Band feedback drills</li>
+                    <li>Slow, controlled reps</li>
+                </ul>
+                <strong>Progress gradually:</strong>
+                <ul>
+                    <li>Light mini-bike</li>
+                    <li>Shallow squats</li>
+                    <li>Controlled posterior chain work</li>
+                </ul>
+                <p>Avoid lateral dominance early.<br>Quality > quantity.<br>Precision > power.</p>
+            </div>
+        </details>
+
+        <details class="framework-mod">
+            <summary>
+                <div class="framework-summary-title"><span>MODULE 6 – Seating Guidelines</span><span style="color:var(--text-dim)">▼</span></div>
+                <span class="framework-summary-text">Neutral pelvis reduces shear.</span>
+            </summary>
+            <div class="framework-content">
+                <strong>Ideal seating:</strong>
+                <ul>
+                    <li>Firm base</li>
+                    <li>Hips slightly higher than knees</li>
+                    <li>Neutral pelvis</li>
+                    <li>Easy stand-up position</li>
+                </ul>
+                <strong>Avoid:</strong>
+                <ul>
+                    <li>Deep, soft couches</li>
+                    <li>Posterior pelvic tilt collapse</li>
+                    <li>Long static sitting</li>
+                </ul>
+                <p>Stability > softness.</p>
+            </div>
+        </details>
+
+        <details class="framework-mod">
+            <summary>
+                <div class="framework-summary-title"><span>MODULE 7 – Quick Reference</span><span style="color:var(--text-dim)">▼</span></div>
+                <span class="framework-summary-text">Quick rules for daily navigation.</span>
+            </summary>
+            <div class="framework-content">
+                <ul>
+                    <li>Slow is therapeutic.</li>
+                    <li>Signal before load.</li>
+                    <li>If speed increases compensation, reduce speed.</li>
+                    <li>If trunk rocks forward/back, reset.</li>
+                    <li>Wear belt during high-demand periods.</li>
+                    <li>Pain is load-sensitive, not purely structural.</li>
+                    <li>This phenotype is trainable.</li>
+                </ul>
+            </div>
+        </details>
+
+        <button class="btn btn-sec" style="margin-top:20px;" onclick="closeFramework(null)">Close Framework</button>
     </div>
 </div>
 
@@ -176,7 +370,10 @@
         </div>
     </div>
 
-    <button class="btn btn-sec" onclick="openInfo()" style="margin-bottom:20px;">ℹ️ Program Guide</button>
+    <div class="row" style="margin-bottom:20px;">
+        <button class="btn btn-sec" style="margin-bottom:0;" onclick="openInfo()">ℹ️ Program Guide</button>
+        <button class="btn btn-sec" style="margin-bottom:0;" onclick="openFramework()">🧠 AMN Framework</button>
+    </div>
 
     <button class="collapsible">0. Daily Status & Notes</button>
     <div class="content">
@@ -304,7 +501,6 @@
         document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') loadData(); });
         loadData();
         
-        // TRUE REAL-TIME AUTO-SAVE: Automatically updates the database on every keystroke/change
         document.querySelectorAll('.save-input').forEach(input => {
             input.addEventListener('input', autoSave);
             input.addEventListener('change', autoSave);
@@ -351,14 +547,15 @@
     function openInfo() { document.getElementById('info-modal').style.display = 'flex'; }
     function closeInfo(e) { if(!e || e.target.id === 'info-modal' || e.target.tagName === 'BUTTON') document.getElementById('info-modal').style.display = 'none'; }
 
+    function openFramework() { document.getElementById('framework-modal').style.display = 'flex'; }
+    function closeFramework(e) { if(!e || e.target.id === 'framework-modal' || e.target.tagName === 'BUTTON') document.getElementById('framework-modal').style.display = 'none'; }
+
     // --- DATA HANDLING ---
     function loadData() {
         const raw = localStorage.getItem(STORAGE_KEY);
         if(raw) { 
             try { 
                 db = JSON.parse(raw); 
-                
-                // GHOSTBUSTER: Scrub old "kneeflex-assist" data completely out of existence
                 let dbChanged = false;
                 db.forEach(e => {
                     if (e.data && e.data['kneeflex-assist']) {
@@ -369,7 +566,6 @@
                 if (dbChanged) {
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
                 }
-
                 renderHistory(); 
                 loadToday(); 
             } 
