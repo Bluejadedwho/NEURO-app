@@ -774,11 +774,21 @@
         if(chartInstance) chartInstance.destroy();
         
         const container = document.querySelector('.chart-container');
-        container.style.width = Math.max(100, labels.length * 50) + "%";
+        // MATH FIX: Changed 50% multiplier to 12%. Only scrolls when > 8 days.
+        container.style.width = Math.max(100, labels.length * 12) + "%";
 
         chartInstance = new Chart(ctx, {
             type: 'bar',
-            data: { labels: labels, datasets: [{ label: key, data: values, backgroundColor: '#38bdf8', borderRadius: 4 }] },
+            data: { 
+                labels: labels, 
+                datasets: [{ 
+                    label: key, 
+                    data: values, 
+                    backgroundColor: '#38bdf8', 
+                    borderRadius: 4,
+                    maxBarThickness: 45 // THICKNESS FIX: Caps the width of the bars
+                }] 
+            },
             options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: '#333' } }, x: { ticks: { color: '#888' } } }, plugins: { legend: { display: false } } }
         });
     }
@@ -807,7 +817,8 @@
         if(statusChartInstance) statusChartInstance.destroy();
 
         const container = canvas.closest('.chart-container');
-        if(container) container.style.width = Math.max(100, labels.length * 50) + "%";
+        // MATH FIX: Applied the exact same scrolling fix to the line chart below it
+        if(container) container.style.width = Math.max(100, labels.length * 12) + "%";
 
         statusChartInstance = new Chart(ctx, {
             type: 'line',
