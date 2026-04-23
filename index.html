@@ -425,9 +425,9 @@
             <div class="row"><div class="col"><label>Left Reps</label><input type="number" id="hiplift-l" class="save-input" autocomplete="off"></div><div class="col"><label>Right Reps</label><input type="number" id="hiplift-r" class="save-input" autocomplete="off"></div></div>
         </div>
         <div class="ex-group">
-            <h3>Hip Press (Clam) <span class="desc-icon" onclick="toggleDesc(this)">❓</span></h3>
-            <div class="desc-text"><strong>Protocol:</strong> Lie on side, knees bent 90°. Lift top knee (clamshell) then press it back down firmly.</div>
-            <div class="row"><div class="col"><label>Left Holds</label><input type="number" id="hippress-l" class="save-input" autocomplete="off"></div><div class="col"><label>Right Holds</label><input type="number" id="hippress-r" class="save-input" autocomplete="off"></div></div>
+            <h3>Supported Knee Press-Down <span class="desc-icon" onclick="toggleDesc(this)">❓</span></h3>
+            <div class="desc-text"><strong>Protocol:</strong> Lie on your side with knees bent and hips stacked. Place a pillow or folded towel between your knees if that feels better. Instead of lifting the top knee yourself, gently let the top knee separate only as much as it naturally can or with a little setup help, then press the top knee back down slowly with control. Count one rep each time you press down and return to the start. This is a modified replacement for clamshells when active lifting is limited.</div>
+            <div class="row"><div class="col"><label>Left Reps</label><input type="number" id="supported-knee-press-l" class="save-input" autocomplete="off"></div><div class="col"><label>Right Reps</label><input type="number" id="supported-knee-press-r" class="save-input" autocomplete="off"></div></div>
         </div>
     </div>
 
@@ -498,6 +498,15 @@
     let pinInput = "";
     let isSettingUpPin = false;
 
+    const FIELD_LABELS = {
+        'supported-knee-press-l': 'Supported Knee Press-Down Left',
+        'supported-knee-press-r': 'Supported Knee Press-Down Right'
+    };
+
+    function getFieldLabel(key) {
+        return FIELD_LABELS[key] || key.replace(/-/g, ' ').toUpperCase();
+    }
+
     window.addEventListener('load', () => {
         document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') loadData(); });
         loadData();
@@ -561,6 +570,16 @@
                 db.forEach(e => {
                     if (e.data && e.data['kneeflex-assist']) {
                         delete e.data['kneeflex-assist'];
+                        dbChanged = true;
+                    }
+                    if (e.data && e.data['hippress-l'] && !e.data['supported-knee-press-l']) {
+                        e.data['supported-knee-press-l'] = e.data['hippress-l'];
+                        delete e.data['hippress-l'];
+                        dbChanged = true;
+                    }
+                    if (e.data && e.data['hippress-r'] && !e.data['supported-knee-press-r']) {
+                        e.data['supported-knee-press-r'] = e.data['hippress-r'];
+                        delete e.data['hippress-r'];
                         dbChanged = true;
                     }
                 });
@@ -685,7 +704,7 @@
             
             let found = false;
             validGraphKeys.forEach(k => {
-                let label = k.replace(/-/g, ' ').toUpperCase();
+                let label = getFieldLabel(k);
                 let opt = document.createElement('option');
                 opt.value = k; opt.textContent = label;
                 select.appendChild(opt);
@@ -782,7 +801,7 @@
             data: { 
                 labels: labels, 
                 datasets: [{ 
-                    label: key, 
+                    label: getFieldLabel(key), 
                     data: values, 
                     backgroundColor: '#38bdf8', 
                     borderRadius: 4,
